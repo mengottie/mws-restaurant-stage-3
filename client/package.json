@@ -1,34 +1,33 @@
 {
-  "name": "restaurant-review-stage-3",
-  "version": "1.0.0",
-  "description": "",
-  "private": true,
+  "name": "mws-restaurant-stage-3",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mengottie/mws-restaurant-stage-3.git"
+  },
   "devDependencies": {
-    "webpack": "^4.16.0",
-    "webpack-command": "^0.4.1",
-    "workbox-webpack-plugin": "^3.4.1",
-    "clean-webpack-plugin": "^0.1.19",
-    "webpack-cli": "^3.0.8",
-    "webpack-dev-server": "^3.1.4",
-    "sass-loader": "^7.0.3",
-    "node-sass": "^4.9.2",
-    "postcss-loader": "^2.1.6",
-    "css-loader": "^1.0.0",
-    "file-loader": "^1.1.11",
-    "imagemin": "^5.3.1",
-    "imagemin-webp": "^4.1.0",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
     "babel-preset-env": "^1.7.0",
-    "idb": "^2.1.2"
+    "browserify": "^16.2.2",
+    "gulp": "^3.9.1",
+    "gulp-jasmine-phantom": "^3.0.0",
+    "gulp-sass": "^4.0.1",
+    "gulp-autoprefixer": "^5.0.0",
+    "gulp-eslint": "^4.0.2",
+    "gulp-concat": "^2.6.1",
+    "gulp-uglify": "^3.0.0",
+    "gulp-babel": "^7.0.1",
+    "gulp-webp": "^3.0.0",
+    "gulp-responsive": "^2.11.0",
+    "gulp-load-plugins": "^1.5.0",
+    "run-sequence": "^2.2.1",
+    "imagemin": "^6.0.0",
+    "imagemin-webp": "^4.1.0",
+    "idb": "^2.1.2",
+    "workbox-build": "^3.4.1"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "webpack --watch",
-    "start": "webpack-dev-server --open",
-    "build": "webpack",
-    "webpack": "npm run webpack -- --mode development"
-  },
-  "keywords": [],
-  "author": "Enrico Mengotti"
+  "dependencies": {
+    "run-sequence": "^2.2.1"
+  }
 }

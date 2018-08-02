@@ -1,0 +1,20 @@
+{"parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module"
+  },
+  "rules": {
+    "env": {
+      "browser": true,
+      "es6": true,
+      "node": true
+      },
+      "indent": [
+          2,
+          2
+      ],
+      "semi": [
+          2,
+          "always"
+      ]
+  }
+}
