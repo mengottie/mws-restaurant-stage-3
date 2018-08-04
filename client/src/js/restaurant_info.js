@@ -2,9 +2,7 @@ var restaurant;
 var map;
 var markerCreated = false;
 
-window.addEventListener('load', (event) => {
-  self.registerServiceWorker();
-});
+
 
 /**
  * load restaurant detail and reviews when the document it's loaded

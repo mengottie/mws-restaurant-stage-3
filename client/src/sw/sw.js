@@ -2,6 +2,7 @@ importScripts('https://storage.googleapis.com/workbox-cdn/releases/3.4.1/workbox
 
 workbox.skipWaiting();
 workbox.clientsClaim();
+// workbox.core.setLogLevel(workbox.core.LOG_LEVELS.silent);
 
 workbox.routing.registerRoute(
   /.*\.(?:png|jpg|jpeg|svg|gif)/g,
@@ -32,27 +33,8 @@ workbox.routing.registerRoute(
 );
 
 workbox.routing.registerRoute(
-  /.*(?:googleapis|gstatic)\.com.*$/,
+  /.*gstatic\.com.*$/,
   workbox.strategies.staleWhileRevalidate()
 );
-
-/* const queue = new workbox.backgroundSync.Queue('myQueueName');
-
-self.addEventListener('fetch', (event) => {
-  // Clone the request to ensure it's save to read when
-  // adding to the Queue.
-  var requestUrl = new URL(event.request.url);
-  const promiseChain = fetch(event.request.clone())
-    .catch((err) => {
-      if (requestUrl.port === 1337
-          && event.request.method === 'PUT') {
-        return queue.addRequest(event.request);
-      } else {
-        return err;
-      }
-    });
-
-  event.waitUntil(promiseChain);
-}); */
 
 workbox.precaching.precacheAndRoute([]);

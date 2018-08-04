@@ -200,12 +200,12 @@ nav {
     h2 {
       color: $h2-color-restaurant;
       font-family: Arial,sans-serif;
-      font-size: 1.3em;
+      font-size: 1.2em;
       font-weight: 200;
       letter-spacing: 0;
       line-height: 1.2em;
       text-transform: uppercase;
-      height: 3.6em;
+      height: 2.5em;
     }
     a {
       background-color: $back-color-button-list;
@@ -234,9 +234,29 @@ nav {
   border-radius: 30px 0 0;
 }
 
-.card-container{
+.card-container {
   margin: 10px 0 10px;
   padding: 2px 16px;
+}
+
+.is-favorite {
+  color: #810808;
+  border: 1px solid #810808;
+  border-radius: 50%;
+  font-size: 2em;
+  width: 1.5em;
+  height: 1.5em;
+  margin: 8px;
+}
+
+.is-not-favorite {
+  color:#666;
+  border: 1px solid #666;
+  border-radius: 50%;
+  font-size: 2em;
+  width: 1.5em;
+  height: 1.5em;
+  margin: 8px;
 }
 
 /* ====================== Restaurant Details ====================== */

@@ -1,12 +1,9 @@
-let restaurants,
-  neighborhoods,
-  cuisines;
+var restaurants;
+var neighborhoods;
+var cuisines;
 var map;
 var markers = [];
-
-window.addEventListener('load', (event) => {
-  self.registerServiceWorker();
-});
+var mapApiInitEnd = false;
 
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
@@ -85,6 +82,8 @@ window.initMap = () => {
     center: loc,
     scrollwheel: false
   });
+  mapApiInitEnd = true;
+  addMarkersToMap();
 };
 
 /**
@@ -119,10 +118,12 @@ resetRestaurants = (restaurants) => {
   const ul = document.getElementById('restaurants-list');
   ul.innerHTML = '';
 
+  self.restaurants = restaurants;
+  // if markers doesnt exist yet don't remove them
+  if (!self.markers) return;
   // Remove all map markers
   self.markers.forEach(m => m.setMap(null));
   self.markers = [];
-  self.restaurants = restaurants;
 };
 
 /**
@@ -133,7 +134,7 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     ul.append(createRestaurantHTML(restaurant));
   });
-  if (self.map) {
+  if (mapApiInitEnd) {
     addMarkersToMap();
   }
 };
@@ -157,6 +158,18 @@ createRestaurantHTML = (restaurant) => {
   const name = document.createElement('h2');
   name.innerHTML = restaurant.name;
   divContainer.append(name);
+  //  if restaurant object doesn't have the is_favorite the favorite toggle button is not created
+  if (restaurant.is_favorite) {
+    const favButton = document.createElement('button');
+    favButton.innerHTML = '♥';
+    toggleIsFavoriteClass(favButton, restaurant.is_favorite);
+    favButton.onclick = function(){
+      restaurant.is_favorite = !restaurant.is_favorite;
+      DBHelper.setFavoriteState(restaurant.id, restaurant.is_favorite);
+      toggleIsFavoriteClass(favButton, restaurant.is_favorite);
+    };
+    divContainer.append(favButton);
+  }
 
   const neighborhood = document.createElement('p');
   neighborhood.innerHTML = restaurant.neighborhood;
@@ -171,30 +184,45 @@ createRestaurantHTML = (restaurant) => {
   more.href = DBHelper.urlForRestaurant(restaurant);
   divContainer.append(more);
 
+  const addReview = document.createElement('a');
+  addReview.innerHTML = 'Add Review';
+  addReview.href = DBHelper.urlForInsertNewReview(restaurant);
+  divContainer.append(addReview);
   return li;
+};
+
+/**
+ * @description toggle the class style of an element between is-favorite and is-not-favorite css class
+ * @param {*} elem
+ * @param {*} isFavorite
+ */
+const toggleIsFavoriteClass = ( elem, isFavorite ) => {
+  if ( isFavorite ) {
+    elem.classList.remove('is-not-favorite');
+    elem.classList.add('is-favorite');
+    elem.setAttribute('aria-label', 'it is set as favorite');
+    elem.setAttribute('aria-pressed', true);
+  }else {
+    elem.classList.remove('is-favorite');
+    elem.classList.add('is-not-favorite');
+    elem.setAttribute('aria-label', 'it is set as not favorite');
+    elem.setAttribute('aria-pressed', false);
+  }
 };
 
 /**
  * Add markers for current restaurants to the map.
  */
-addMarkersToMap = (restaurants = self.restaurants) => {
+addMarkersToMap = () => {
+  if (!restaurants) return;
   restaurants.forEach(restaurant => {
     // Add marker to the map
     const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
-    google.maps.event.addListener(marker, 'click', () => {
-      window.location.href = marker.url;
-    });
-    self.markers.push(marker);
+    if (marker){
+      self.markers.push(marker);
+      google.maps.event.addListener(marker, 'click', () => {
+        window.location.href = marker.url;
+      });
+    }
   });
 };
-
-/**
- *@description Register service worker
- */
-function registerServiceWorker() {
-  if (!navigator.serviceWorker) return;
-
-  navigator.serviceWorker.register('/sw.js').then(function (reg) {
-    console.log('registered service worker: ' + reg);
-  });
-}

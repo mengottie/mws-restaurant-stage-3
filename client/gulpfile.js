@@ -30,16 +30,27 @@ const paths = {
 };
 
 gulp.task('default', ['copy-html', 'copy-js', 'styles'], function () {
-  gulp.watch(paths.srcSass, ['styles']);
-  gulp.watch(paths.srcHtml, ['copy-html']);
-  gulp.watch(paths.srcJs, ['copy-js']);
-  gulp.watch(paths.srcSw, ['copy-sw']);
+  gulp.watch(paths.srcSass, ['styles', 'workbox-build-sw']);
+  gulp.watch(paths.srcHtml, ['copy-html','workbox-build-sw']);
+  gulp.watch(paths.srcJs, ['copy-js', 'workbox-build-sw']);
+  gulp.watch(paths.srcSw, ['copy-sw','workbox-build-sw']);
 });
 
 gulp.task('dist', function(c){
   runSequence(
     'clean-all-dist',
     'images-resize-responsive',
+    'copy-html',
+    'copy-js',
+    'styles',
+    'copy-icons',
+    'workbox-build-sw',
+    c
+  );
+});
+
+gulp.task('make', function(c){
+  runSequence(
     'copy-html',
     'copy-js',
     'styles',
@@ -137,7 +148,7 @@ gulp.task('workbox-build-sw', function(){
       '*.html',
       'css/*.css',
       'js/*.js',
-      '*.json'
+      '*.json',
     ],
     globIgnores: [
       'node_modules/**/*'

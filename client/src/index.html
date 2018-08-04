@@ -44,6 +44,14 @@
       Copyright (c) 2017 <a href="/"><strong>Restaurant Reviews</strong></a> All Rights Reserved.
     </footer>
   </div>
+  <script>
+    window.addEventListener('load', (event) => {
+      if (!navigator.serviceWorker) return;
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered - main', reg))
+        .catch(err => console.log('Something wrong in SW registration - main', err));
+    });
+  </script>
   <script type="application/javascript" src="js/idb.js"></script>
   <script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
   <script type="application/javascript" charset="utf-8" src="js/main.js"></script>

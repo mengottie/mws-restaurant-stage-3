@@ -219,6 +219,14 @@ class DBHelper {
   }
 
   /**
+   * @description Restaurant review page URL.
+   * @returns string
+   */
+  static urlForInsertNewReview(restaurant){
+    return (`./review.html?id=${restaurant.id}`);
+  }
+
+  /**
    * @description Restaurant image URL.
    * @returns string
    */
@@ -232,7 +240,7 @@ class DBHelper {
   }
 
   /**
-   * @description Restaurnat srcset for responsive images of url
+   * @description Restaurant srcset for responsive images of url
    * @returns string
    */
   static imageSrcsetForRestaurant(restaurant) {
@@ -274,5 +282,36 @@ class DBHelper {
       animation: google.maps.Animation.DROP
     });
     return marker;
+  }
+
+  /**
+   * @description set a restaurant as a favorite using put endpoint
+   * http://localhost:1337/restaurants/<restaurant_id>/?is_favorite=bool
+   * @param {*} restId
+   * @param {*} favState
+   */
+  static setFavoriteState(restId, favState) {
+    console.log('set favorite button click');
+    fetch(DBHelper.DATABASE_URL + `/${restId}/?is_favorite=${favState}`, {
+      method: 'PUT'
+    })
+      .then(function(resp){
+        DBHelper.dbpromise()
+          .then(function(db){
+            const tx = db.transaction('restaurants', 'readwrite');
+            const objSt = tx.objectStore('restaurants');
+            objSt.get(restId)
+              .then(function(restLocIdb){
+                restLocIdb.is_favorite = favState;
+                objSt.put(restLocIdb);
+              })
+              .catch(function(err){
+                console.log(`error on get local retaurant by id ${restId}`, err );
+              });
+          });
+      })
+      .catch(function(err){
+        console.log(`error on set favorite state ${favState} to restaurant id ${restId}`, err);
+      });
   }
 }
