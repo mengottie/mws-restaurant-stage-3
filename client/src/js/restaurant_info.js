@@ -1,7 +1,7 @@
 var restaurant;
 var map;
 var markerCreated = false;
-
+var reviews;
 
 
 /**
@@ -12,13 +12,18 @@ document.addEventListener('DOMContentLoaded', (event) => {
   fetchRestaurantFromURL((error, restaurant) => {
     if (error) { // Got an error!
       console.error(error);
-    } else {
+      return;
+    }
+    self.restaurant = restaurant;
+    fetchReviewsFromURL((error, reviews) => {
+      self.reviews = reviews;
       fillBreadcrumb();
+      fillRestaurantHTML();
       if (self.map && !markerCreated) {
         DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
         markerCreated = true;
       }
-    }
+    });
   });
 });
 
@@ -46,25 +51,31 @@ window.initMap = () => {
  * Get current restaurant from page URL.
  */
 fetchRestaurantFromURL = (callback) => {
-  if (self.restaurant) { // restaurant already fetched!
-    callback(null, self.restaurant);
-    return;
-  }
   const id = getParameterByName('id');
   if (!id) { // no id found in URL
     error = 'No restaurant id in URL';
     callback(error, null);
   } else {
     DBHelper.fetchRestaurantById(id, (error, restaurant) => {
-      self.restaurant = restaurant;
-      if (!restaurant) {
+      if (error) {
         console.error(error);
         return;
       }
-      fillRestaurantHTML();
+      self.restaurant = restaurant;
       callback(null, restaurant);
     });
   }
+};
+
+fetchReviewsFromURL = (callback) => {
+  const id = getParameterByName('id');
+  DBHelper.fetchReviwsByRestaurantId(id, (errorReview, fetchedReviews) => {
+    if (errorReview) {
+      console.error(errorReview);
+    }
+    self.reviews = fetchedReviews;
+    callback(null, fetchedReviews);
+  });
 };
 
 /**
@@ -118,12 +129,11 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
 /**
  * Create all reviews HTML and add them to the webpage.
  */
-fillReviewsHTML = (reviews = self.restaurant.reviews) => {
+fillReviewsHTML = (reviews = self.reviews) => {
   const container = document.getElementById('reviews-container');
   const title = document.createElement('h3');
   title.innerHTML = 'Reviews';
   container.appendChild(title);
-
   if (!reviews) {
     const noReviews = document.createElement('p');
     noReviews.innerHTML = 'No reviews yet!';
@@ -152,7 +162,8 @@ createReviewHTML = (review) => {
 
   const date = document.createElement('span');
   date.classList.add('reviews-title-detail');
-  date.innerHTML = review.date;
+  const reviewDate = new Date(review.createdAt);
+  date.innerHTML = reviewDate.toDateString();
   divTitle.appendChild(date);
 
   const rating = document.createElement('span');
@@ -192,14 +203,3 @@ getParameterByName = (name, url) => {
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 };
-
-/**
- *@description Register service worker
- */
-function registerServiceWorker() {
-  if (!navigator.serviceWorker) return;
-
-  navigator.serviceWorker.register('/sw.js').then(function (reg) {
-    console.log('registered service worker: ' + reg);
-  });
-}

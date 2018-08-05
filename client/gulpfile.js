@@ -141,6 +141,11 @@ gulp.task('clean-all-dist', function(){
   del.sync(paths.destCss);
 });
 
+gulp.task('clean-code', function(){
+  del.sync(paths.destJs);
+  del.sync(paths.destCss);
+});
+
 gulp.task('workbox-build-sw', function(){
   return workbox.injectManifest({
     globDirectory: 'dist',

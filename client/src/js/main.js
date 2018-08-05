@@ -159,17 +159,17 @@ createRestaurantHTML = (restaurant) => {
   name.innerHTML = restaurant.name;
   divContainer.append(name);
   //  if restaurant object doesn't have the is_favorite the favorite toggle button is not created
-  if (restaurant.is_favorite) {
-    const favButton = document.createElement('button');
-    favButton.innerHTML = '♥';
+
+  const favButton = document.createElement('button');
+  favButton.innerHTML = '♥';
+  toggleIsFavoriteClass(favButton, restaurant.is_favorite);
+  favButton.onclick = function(){
+    restaurant.is_favorite = !restaurant.is_favorite;
+    DBHelper.setFavoriteState(restaurant.id, restaurant.is_favorite);
     toggleIsFavoriteClass(favButton, restaurant.is_favorite);
-    favButton.onclick = function(){
-      restaurant.is_favorite = !restaurant.is_favorite;
-      DBHelper.setFavoriteState(restaurant.id, restaurant.is_favorite);
-      toggleIsFavoriteClass(favButton, restaurant.is_favorite);
-    };
-    divContainer.append(favButton);
-  }
+  };
+  divContainer.append(favButton);
+
 
   const neighborhood = document.createElement('p');
   neighborhood.innerHTML = restaurant.neighborhood;

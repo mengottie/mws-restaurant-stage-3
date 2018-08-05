@@ -2,6 +2,35 @@
  * Common database helper functions.
  */
 class DBHelper {
+
+  /**
+   * Database URL.
+   * Change DBHelper to restaurants.json file location on your server.
+   */
+  static get DATABASE_URL() {
+    const port = 1337; // Change this to your server port
+    return `http://localhost:${port}`;
+  }
+
+  /**
+   * @description create local indexDB for get data offline
+   */
+  static dbpromise() {
+    return idb.open('restaureview', 1, function (upgradeDB) {
+      upgradeDB.createObjectStore('restaurants', {
+        keyPath: 'id'
+      });
+      const revObjStore = upgradeDB.createObjectStore('reviews', {
+        keyPath: 'id'
+      });
+      console.log('after create objectstore reviews');
+      revObjStore.createIndex(
+        'restaurant_id', 'restaurant_id', {unique: false}
+      );
+      console.log('after create objectstore index restaurant_id');
+    });
+  }
+
   /**
    * Fetch all restaurants.
    */
@@ -12,7 +41,7 @@ class DBHelper {
         return tx.objectStore('restaurants').getAll()
           .then(function (restaurants) {
             if (restaurants.length === 0) {
-              fetch(DBHelper.DATABASE_URL)
+              fetch(`${DBHelper.DATABASE_URL}/restaurants`)
                 .then(function (response) {
                   return response.json();
                 })
@@ -36,23 +65,6 @@ class DBHelper {
       });
   }
 
-  static dbpromise() {
-    return idb.open('restaureview', 1, function (upgradeDB) {
-      upgradeDB.createObjectStore('restaurants', {
-        keyPath: 'id'
-      });
-    });
-  }
-
-  /**
-   * Database URL.
-   * Change DBHelper to restaurants.json file location on your server.
-   */
-  static get DATABASE_URL() {
-    const port = 1337; // Change this to your server port
-    return `http://localhost:${port}/restaurants`;
-  }
-
   /**
    * @description store Restaurants object into indexDB
    * @param restaurants array of restaurants
@@ -67,6 +79,24 @@ class DBHelper {
         });
       })
       .catch(function (err) {
+        console.log(err);
+      });
+  }
+
+  /**
+   * @description store into indexDB the review for use offline
+   * @param {*} reviews
+   */
+  static storeReviewsLocaly (reviews) {
+    DBHelper.dbpromise()
+      .then(function(db){
+        const tx = db.transaction('reviews', 'readwrite');
+        const revStore = tx.objectStore('reviews');
+        reviews.forEach(function(review){
+          revStore.put(review);
+        });
+      })
+      .catch(function (err){
         console.log(err);
       });
   }
@@ -97,7 +127,7 @@ class DBHelper {
         return tx.objectStore('restaurants').get(parseInt(id))
           .then(function (restaurant) {
             if (!restaurant) {
-              fetch(DBHelper.DATABASE_URL + `/${id}`)
+              fetch(`${DBHelper.DATABASE_URL}/restaurants/${id}`)
                 .then(function (response) {
                   return response.json();
                 })
@@ -122,9 +152,54 @@ class DBHelper {
   }
 
   /**
+   * @description get reviews of a restaurant from network first and fallback from local indexDb
+   *              because review of a restaurant could be change frequently
+   * @param {*} id
+   * @param {*} callback
+   */
+  static fetchReviwsByRestaurantId (idRest, callback) {
+    fetch(DBHelper.urlGetReviewByRestaurantId(idRest))
+      .then(function(response){
+        return response.json();
+      })
+      .then(function(reviewsFromNetwork){
+        DBHelper.storeReviewsLocaly(reviewsFromNetwork);
+        callback(null, reviewsFromNetwork);
+      })
+      .catch(function(err){
+        DBHelper.getAllReviewByRestId(idRest, callback);
+      });
+  }
+
+  /**
+   * @description return a promise with the result of retriving all reviews of a restaurant id from
+   *  local IDB trough index 'restaurant_id' on object store 'reviews'
+   * @param {*} restId
+   */
+  static getAllReviewByRestId(restId, callback){
+    console.log('id rstaurant is: ', restId);
+    DBHelper.dbpromise()
+      .then(function(db){
+        const tx = db.transaction('reviews','readonly');
+        const indexIdRest = tx.objectStore('reviews').index('restaurant_id');
+        return indexIdRest.getAll(parseInt(restId));
+      })
+      .then(function(reviewFromLocalIDB){
+        if (!reviewFromLocalIDB) {
+          callback('no review found', null);
+        } else {
+          callback(null, reviewFromLocalIDB);
+        }
+      })
+      .catch(function(err){
+        callback(err, null);
+      });
+  }
+
+  /**
    * Fetch restaurants by a cuisine type with proper error handling.
    */
-  static fetchRestaurantByCuisine(cuisine, callback) {
+  static fetchRestaurantByCuisine (cuisine, callback) {
     // Fetch all restaurants  with proper error handling
     DBHelper.fetchRestaurants((error, restaurants) => {
       if (error) {
@@ -140,7 +215,7 @@ class DBHelper {
   /**
    * Fetch restaurants by a neighborhood with proper error handling.
    */
-  static fetchRestaurantByNeighborhood(neighborhood, callback) {
+  static fetchRestaurantByNeighborhood (neighborhood, callback) {
     // Fetch all restaurants
     DBHelper.fetchRestaurants((error, restaurants) => {
       if (error) {
@@ -222,8 +297,16 @@ class DBHelper {
    * @description Restaurant review page URL.
    * @returns string
    */
-  static urlForInsertNewReview(restaurant){
-    return (`./review.html?id=${restaurant.id}`);
+  static urlForInsertNewReview(restId){
+    return (`./reviews.html/?id=${restId}`);
+  }
+
+  /**
+   * @description return uri of API for get reviews by restaurant id
+   * @param {*} restId
+   */
+  static urlGetReviewByRestaurantId(restId){
+    return (`${DBHelper.DATABASE_URL}/reviews/?restaurant_id=${restId}`);
   }
 
   /**
@@ -292,7 +375,7 @@ class DBHelper {
    */
   static setFavoriteState(restId, favState) {
     console.log('set favorite button click');
-    fetch(DBHelper.DATABASE_URL + `/${restId}/?is_favorite=${favState}`, {
+    fetch(`${DBHelper.DATABASE_URL}/restaurants/${restId}/?is_favorite=${favState}`, {
       method: 'PUT'
     })
       .then(function(resp){
