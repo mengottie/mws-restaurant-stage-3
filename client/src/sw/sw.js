@@ -11,7 +11,7 @@ workbox.routing.registerRoute(
     plugins: [
       new workbox.expiration.Plugin({
         maxEntries: 60,
-        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+        maxAgeSeconds: 120 * 24 * 60 * 60, // 120 Days
       }),
     ],
   })
@@ -34,6 +34,16 @@ workbox.routing.registerRoute(
 
 workbox.routing.registerRoute(
   /.*gstatic\.com.*$/,
+  workbox.strategies.staleWhileRevalidate()
+);
+
+workbox.routing.registerRoute(
+  new RegExp('restaurant.html(.*)'),
+  workbox.strategies.staleWhileRevalidate()
+);
+
+workbox.routing.registerRoute(
+  new RegExp('review.html(.*)'),
   workbox.strategies.staleWhileRevalidate()
 );
 

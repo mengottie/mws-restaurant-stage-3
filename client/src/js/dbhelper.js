@@ -23,11 +23,12 @@ class DBHelper {
       const revObjStore = upgradeDB.createObjectStore('reviews', {
         keyPath: 'id'
       });
-      console.log('after create objectstore reviews');
       revObjStore.createIndex(
         'restaurant_id', 'restaurant_id', {unique: false}
       );
-      console.log('after create objectstore index restaurant_id');
+      upgradeDB.createObjectStore('review_offline', {
+        autoIncrement: true
+      });
     });
   }
 
@@ -85,7 +86,7 @@ class DBHelper {
 
   /**
    * @description store into indexDB the review for use offline
-   * @param {*} reviews
+   * @param {Array} reviews
    */
   static storeReviewsLocaly (reviews) {
     DBHelper.dbpromise()
@@ -95,6 +96,22 @@ class DBHelper {
         reviews.forEach(function(review){
           revStore.put(review);
         });
+      })
+      .catch(function (err){
+        console.log(err);
+      });
+  }
+
+  /**
+   * @description store into indexDB the review for use offline
+   * @param {object} review
+   */
+  static storeSingleReviewLocaly (review) {
+    DBHelper.dbpromise()
+      .then(function(db){
+        const tx = db.transaction('reviews', 'readwrite');
+        const revStore = tx.objectStore('reviews');
+        revStore.put(review);
       })
       .catch(function (err){
         console.log(err);
@@ -124,30 +141,27 @@ class DBHelper {
     DBHelper.dbpromise()
       .then(function (db) {
         let tx = db.transaction('restaurants', 'readonly');
-        return tx.objectStore('restaurants').get(parseInt(id))
-          .then(function (restaurant) {
-            if (!restaurant) {
-              fetch(`${DBHelper.DATABASE_URL}/restaurants/${id}`)
-                .then(function (response) {
-                  return response.json();
-                })
-                .then(function (restaurant) {
-                  DBHelper.storeSingleRestaurant(restaurant);
-                  callback(null, restaurant);
-                })
-                .catch(function(err){
-                  callback(err, null);
-                });
-            } else {
-              callback(null, restaurant);
-            }
-          })
-          .catch(function(){
-            callback(`Restaurant id:${id} does not exist`);
-          });
+        return tx.objectStore('restaurants').get(parseInt(id));
       })
-      .catch(function (err) {
-        callback(err, null);
+      .then(function (restaurant) {
+        if (!restaurant) {
+          fetch(`${DBHelper.DATABASE_URL}/restaurants/${id}`)
+            .then(function (response) {
+              return response.json();
+            })
+            .then(function (restaurant) {
+              DBHelper.storeSingleRestaurant(restaurant);
+              callback(null, restaurant);
+            })
+            .catch(function(err){
+              callback(err, null);
+            });
+        } else {
+          callback(null, restaurant);
+        }
+      })
+      .catch(function(){
+        callback(`Restaurant id:${id} does not exist`);
       });
   }
 
@@ -289,8 +303,8 @@ class DBHelper {
    * @description Restaurant page URL.
    * @returns string
    */
-  static urlForRestaurant(restaurant) {
-    return (`./restaurant.html?id=${restaurant.id}`);
+  static urlForRestaurant(restId) {
+    return (`./restaurant.html?id=${restId}`);
   }
 
   /**
@@ -298,7 +312,7 @@ class DBHelper {
    * @returns string
    */
   static urlForInsertNewReview(restId){
-    return (`./reviews.html/?id=${restId}`);
+    return (`./review.html?id=${restId}`);
   }
 
   /**
@@ -395,6 +409,76 @@ class DBHelper {
       })
       .catch(function(err){
         console.log(`error on set favorite state ${favState} to restaurant id ${restId}`, err);
+      });
+  }
+
+  /**
+   *
+   * @param {*} newReview
+   */
+  static saveNewReview (newReview, callback) {
+    console.log('saveNewReview it\'s called');
+    var fetchOption = {
+      method: 'POST',
+      body: JSON.stringify(newReview),
+      headers: new Headers({
+        'Content-type': 'application/json'
+      })
+    };
+
+    fetch(`${DBHelper.DATABASE_URL}/reviews`, fetchOption)
+      .then(function(response){
+        console.log(response);
+        DBHelper.storeSingleReviewLocaly(newReview);
+        callback(null, true);
+      })
+      .catch(function(err){
+        console.log(err);
+        return DBHelper.dbpromise();
+      })
+      .then(function(db){
+        const tx = db.transaction('review_offline', 'readwrite');
+        const objst = tx.objectStore('review_offline');
+        objst.put(newReview);
+        return tx.complete;
+      })
+      .then(function(){
+        console.log('review inserted in review_offline datastore');
+        callback(null, false);
+      })
+      .catch(function(err){
+        console.log(err);
+        callback(err, false);
+      });
+  };
+
+  /**
+   * @description if some review had some network problem to be sended to API
+   * when the event 'online' it's fired this method try to send all review saved off-line to API
+   * TODO it's better use the workbox.backgroundSync whith a custom implementation to menage notification to user. It's need more study of this workbox functionality
+   */
+  static postOffLineReview(){
+    console.log('postOffline it\'s called');
+    DBHelper.dbpromise()
+      .then(function(db){
+        const tx = db.transaction('review_offline', 'readwrite');
+        const objstoreOffLine = tx.objectStore('review_offline');
+        objstoreOffLine.openCursor()
+          .then(function deleteSent(cursor){
+            if (!cursor) return;
+            DBHelper.saveNewReview(cursor.value, function(err, flagOnLIne){
+              if (!flagOnLIne) return;
+              console.log('review sended to API');
+            });
+            cursor.delete();
+            return cursor.contiue().then(deleteSent);
+          })
+          .catch(function(err){
+            console.log(err);
+          });
+      })
+      .catch(function(err){
+        console.log(err);
       });
   }
 }

@@ -5,6 +5,10 @@ var map;
 var markers = [];
 var mapApiInitEnd = false;
 
+window.addEventListener('online', (event) => {
+  DBHelper.postOffLineReview();
+});
+
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
@@ -12,6 +16,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
   fetchNeighborhoods();
   fetchCuisines();
   updateRestaurants();
+  const mapstatic = document.getElementById('static-map');
+  mapstatic.addEventListener('click', () => {
+    activateMapInteractive();
+  });
 });
 
 /**
@@ -67,6 +75,18 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
     option.value = cuisine;
     select.append(option);
   });
+};
+
+/**
+ * Optimize goggle map loading using static map image
+ */
+function activateMapInteractive(){
+  const staticMap = document.getElementById("static-map");
+  const mapInteractive = document.getElementById("map");
+  if(staticMap.style.display == '') {
+    document.getElementById("static-map").style.display = 'none';
+    mapInteractive.style.display = 'block';
+  }
 };
 
 /**
@@ -140,17 +160,49 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
 };
 
 /**
+ * @description in the process of create the dom element of reataurant list define a lazy load mechanism to improve loading performances
+ */
+lazyLoadImages = (restaurant, liElement) => {
+  const image = document.createElement('img');
+  image.alt = DBHelper.imageAltForRestaurant(restaurant);
+
+  let observer;
+  const observerOptions = {
+    root: null,
+    rootMargin: "0px",
+    threshold: 0.1,
+  };
+  if ('Intersection') {
+    observer = new IntersectionObserver (handleIntersection, observerOptions);
+    observer.observe(image);
+  } else {
+    console.log('Intersection Observer not supported');
+    loadImage(iamge);
+  }
+
+  const loadImage = (image) => {
+    image.className = 'restaurant-img';
+    image.srcset = DBHelper.imageSrcsetForRestaurant(restaurant);
+    image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  };
+
+  function handleIntersection(entries, observer) {
+    entries.forEach(entry => {
+      if (entry.intersectionRatio > 0) {
+        loadImage(entry.target);
+        observer.unobserve(entry.target);
+      }
+    });
+  }
+  liElement.append(image);
+};
+
+/**
  * Create restaurant HTML.
  */
 createRestaurantHTML = (restaurant) => {
   const li = document.createElement('li');
-  const image = document.createElement('img');
-  image.className = 'restaurant-img';
-  image.srcset = DBHelper.imageSrcsetForRestaurant(restaurant);
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
-  image.alt = DBHelper.imageAltForRestaurant(restaurant);
-  li.append(image);
-
+  lazyLoadImages(restaurant, li);
   const divContainer = document.createElement('div');
   divContainer.classList.add('card-container');
   li.append(divContainer);
@@ -181,12 +233,12 @@ createRestaurantHTML = (restaurant) => {
 
   const more = document.createElement('a');
   more.innerHTML = 'View Details';
-  more.href = DBHelper.urlForRestaurant(restaurant);
+  more.href = DBHelper.urlForRestaurant(restaurant.id);
   divContainer.append(more);
 
   const addReview = document.createElement('a');
   addReview.innerHTML = 'Add Review';
-  addReview.href = DBHelper.urlForInsertNewReview(restaurant);
+  addReview.href = DBHelper.urlForInsertNewReview(restaurant.id);
   divContainer.append(addReview);
   return li;
 };

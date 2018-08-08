@@ -23,6 +23,7 @@
 
     <main class="maincontent">
       <section id="map-container" >
+        <div id="static-map"></div>
         <div id="map" tabindex="-1" role="application"></div>
       </section>
 
@@ -52,6 +53,14 @@
         .then(reg => console.log('Service Worker registered - main', reg))
         .catch(err => console.log('Something wrong in SW registration - main', err));
     });
+    var staticMap = document.getElementById("static-map");
+    staticMap.onclick = function () {
+      var mapInteractive = document.getElementById("map");
+      if(mapInteractive.style.display === 'none') {
+        staticMap.style.display = 'none';
+        map.style.display = 'block';
+      }
+    };
   </script>
   <script type="application/javascript" src="js/idb.js"></script>
   <script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>

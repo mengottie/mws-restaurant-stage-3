@@ -1,5 +1,6 @@
 $h2-color-restaurant: #a85008;
 $back-color-button-list: #a85008;
+$text-button-color: #ffffff;
 $fontRoboto: Roboto, sans-serif;
 $fontArial: Arial, Helvetica, sans-serif;
 
@@ -155,6 +156,15 @@ nav {
   height: 100%;
   width: 100%;
   background-color: #ccc;
+  display: none;
+}
+
+#static-map {
+  height: 100%;
+  width: 100%;
+  display: block;
+  background-image: url("https://maps.googleapis.com/maps/api/staticmap?center=40.722216,-73.987501&zoom=12&size=800x400&format=jpg&maptype=roadmap&key=AIzaSyDJXVmshVmbqIOALmur6IPqJ0vY69oRlF0");
+  background-size: cover;
 }
 
 /* ====================== Restaurant Filtering ====================== */
@@ -216,8 +226,8 @@ nav {
       color: #fff;
       display: inline-block;
       font-size: 1em;
-      margin: 15px 0 5px 15px;
-      padding: 8px 30px 10px;
+      margin: 15px 0 5px 2px;
+      padding: 8px 10px 5px;
       text-align: center;
       text-transform: uppercase;
     }
@@ -262,27 +272,45 @@ nav {
 }
 
 /* ====================== Restaurant Details ====================== */
-.inside header {
-  position: fixed;
-  top: 0;
-  height: 80px;
-  width: 100%;
-  z-index: 1000;
-}
+.inside {
+  header {
+    position: fixed;
+    top: 0;
+    height: 80px;
+    width: 100%;
+    z-index: 1000;
+  }
 
-.inside .maincontent {
-  top: 80px;
-}
+  .maincontent {
+    top: 87px;
+  }
 
-.inside #map-container {
-  background: transparent none repeat scroll 0 0;
-  right: 0;
-  height: 45vh;
-}
+  .maincontent-review {
+    top: 130px;
+  }
 
-.inside #map {
-  background-color: #ccc;
-  max-width: 100%;
+  #map-container {
+    background: transparent none repeat scroll 0 0;
+    right: 0;
+    height: 45vh;
+  }
+
+  #map {
+    display: block;
+    background-color: #ccc;
+    max-width: 100%;
+  }
+
+  #static-map {
+    display: block;
+    background-color: #ccc;
+    max-width: 100%;
+
+    img {
+      width: inherit;
+      height: inherit;
+    }
+  }
 }
 
 .restaurant-name {
@@ -335,7 +363,7 @@ nav {
   font-weight: 300;
   letter-spacing: -1px;
   padding-bottom: 1pt;
-}
+  }
 
 .reviews-list {
   margin: 0;
@@ -354,6 +382,10 @@ nav {
       padding: 0.8em;
     }
   }
+}
+
+.revivew-offline {
+  background-color: #666;
 }
 
 .reviews-header {
@@ -390,6 +422,71 @@ nav {
   color: #666;
 }
 
+.form-container {
+  top:  130px;
+  width: 100%;
+  div {
+    margin: 10px;
+    padding: 10px;
+  }
+  input {
+    width: 100%;
+  }
+  textarea {
+    height: 30vw;
+    width: 100%;
+  }
+  button {
+    background-color:$back-color-button-list;
+    color: $text-button-color;
+    padding: 10px;
+    border-radius: 10px;
+  }
+  select {
+    background-color: white;
+    border: 1px solid #fff;
+    font-family: $fontRoboto;
+    font-size: 1em;
+    height: 48px;
+    letter-spacing: 0;
+    padding: 0 10px;
+    width: 100%;
+  }
+}
+
+.restaurant-reviews {
+  width: 100%;
+
+  h3 {
+    font-family: $fontRoboto;
+    display: inline-flex;
+    margin-right: 50px;
+  }
+
+  a {
+    background-color: $back-color-button-list;
+    border-bottom: 3px solid #eee;
+    border-radius: 10px;
+    color: #fff;
+    display: inline-block;
+    font-size: 1em;
+    margin: 15px 0 5px 2px;
+    padding: 8px 10px 5px;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .review-offline {
+    li {
+      background-color: #d18f8f;
+    }
+
+    .reviews-header {
+      background-color: #810808;
+      color:whitesmoke;
+    }
+  }
+}
 
 /* ===========Grid Layout Definition ================= */
 @media screen and (min-width: 700px) {
@@ -400,14 +497,12 @@ nav {
     width: 100%;
   }
 
-  .inside #map-container {
-    width: 100%;
-    height: inherit;
-    margin-bottom: 10px;
-  }
-
-  .restaurant-reviews {
-    width: 100%;
+  .inside {
+    #map-container {
+      width: 100%;
+      height: inherit;
+      margin-bottom: 10px;
+    }
   }
 
   footer {
@@ -443,6 +538,25 @@ nav {
 
   .reviews-list li {
     width: 32%;
+  }
+
+  .form-container {
+    top:  87px;
+    width: 100%;
+    div {
+      margin: 10px;
+      padding: 10px;
+    }
+    input {
+      width: 50%;
+    }
+    textarea {
+      height: 10vw;
+      width: 100%;
+    }
+    select {
+      width: 50%;
+    }
   }
 }
 

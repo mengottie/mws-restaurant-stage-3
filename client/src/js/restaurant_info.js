@@ -3,7 +3,9 @@ var map;
 var markerCreated = false;
 var reviews;
 
-
+window.addEventListener('online', (event) => {
+  DBHelper.postOffLineReview();
+});
 /**
  * load restaurant detail and reviews when the document it's loaded
  * instead the current delegation of the responsability at the initMap function
@@ -134,6 +136,12 @@ fillReviewsHTML = (reviews = self.reviews) => {
   const title = document.createElement('h3');
   title.innerHTML = 'Reviews';
   container.appendChild(title);
+
+  const addReview = document.createElement('a');
+  addReview.innerHTML = 'Add Review';
+  addReview.href = DBHelper.urlForInsertNewReview(restaurant.id);
+  container.append(addReview);
+
   if (!reviews) {
     const noReviews = document.createElement('p');
     noReviews.innerHTML = 'No reviews yet!';
