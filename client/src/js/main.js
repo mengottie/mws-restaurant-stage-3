@@ -213,7 +213,7 @@ createRestaurantHTML = (restaurant) => {
   //  if restaurant object doesn't have the is_favorite the favorite toggle button is not created
 
   const favButton = document.createElement('button');
-  favButton.innerHTML = '♥';
+  console.log(restaurant.is_favorite);
   toggleIsFavoriteClass(favButton, restaurant.is_favorite);
   favButton.onclick = function(){
     restaurant.is_favorite = !restaurant.is_favorite;
@@ -250,11 +250,13 @@ createRestaurantHTML = (restaurant) => {
  */
 const toggleIsFavoriteClass = ( elem, isFavorite ) => {
   if ( isFavorite ) {
+    elem.innerHTML = '♥';
     elem.classList.remove('is-not-favorite');
     elem.classList.add('is-favorite');
     elem.setAttribute('aria-label', 'it is set as favorite');
     elem.setAttribute('aria-pressed', true);
   }else {
+    elem.innerHTML = 'Mark as favorite';
     elem.classList.remove('is-favorite');
     elem.classList.add('is-not-favorite');
     elem.setAttribute('aria-label', 'it is set as not favorite');
